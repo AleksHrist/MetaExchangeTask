@@ -16,8 +16,6 @@ namespace MetaExchangeSowaLabs
         
         static void Main(string[] args)
         {
-            Stopwatch st = new Stopwatch();
-            st.Start();
             //Extract raw data from the file
             var orderBooks = ExtractNOrderBooks(_PathToFile, _NumberOfRows);
             
@@ -26,8 +24,6 @@ namespace MetaExchangeSowaLabs
             
             //Print the calculated optimal steps
             result.ForEach(Console.WriteLine);
-            st.Stop();
-            Console.WriteLine(st.Elapsed);
         }
 
         private static List<string> ExtractNOrderBooks(string path, int numberOfRows)
@@ -37,7 +33,6 @@ namespace MetaExchangeSowaLabs
 
         private static List<string> MetaExchangeBestPrice(List<string> orderBooks, TypeOfOrderEnum typeOfOrder, decimal amountOfBtc)
         {
-            //remove the initial value so the row can be deserialized
             var metaExchange = DeserializeOrderBooks(orderBooks);
 
 
@@ -46,6 +41,7 @@ namespace MetaExchangeSowaLabs
 
         private static List<OrderBookEntity> DeserializeOrderBooks(List<string> orderBooks)
         {
+            //remove the timestamp so the row can be deserialized
             var cleanOrderBooks = new List<string>();
             orderBooks.ForEach(x => { cleanOrderBooks.Add(x.Remove(0, x.IndexOf('{'))); });
 
