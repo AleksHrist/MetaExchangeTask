@@ -11,55 +11,96 @@ namespace MetaExchangeSowaLabs
 {
     class Program
     {
-        private const string _PathToFile = "order_books_data";
-        private const int _NumberOfRows = 5000;
+        private const string _PathToOrdersFile = "order_books_data";
+        private const string _PathToBalanceFile = "order_books_balance";
+        private const int _NumberOfOrderBooks = 5000;
         
         static void Main(string[] args)
         {
-            //Extract raw data from the file
-            var orderBooks = ExtractNOrderBooks(_PathToFile, _NumberOfRows);
+            //Extract order books raw data from the file
+            var orderBooks = ExtractNRows(_PathToOrdersFile, _NumberOfOrderBooks);
+            var orderBooksUserBalance = ExtractNRows(_PathToBalanceFile, _NumberOfOrderBooks);
+            
+            //Extract balance raw data from the file
             
             //Call the algorithm 
-            var result = MetaExchangeBestPrice(orderBooks, TypeOfOrderEnum.Buy, (decimal) 2.3139);
+            var result = MetaExchangeBestPrice(orderBooks, orderBooksUserBalance, TypeOfOrderEnum.Buy, (decimal) 2.3139);
             
             //Print the calculated optimal steps
             result.ForEach(Console.WriteLine);
         }
 
-        private static List<string> ExtractNOrderBooks(string path, int numberOfRows)
+        private static IEnumerable<string> ExtractNRows(string path, int numberOfRows)
         {
-            return File.ReadLines(path).Take(numberOfRows).ToList();
+            return File.ReadLines(path).Take(numberOfRows);
         }
+        
 
-        private static List<string> MetaExchangeBestPrice(List<string> orderBooks, TypeOfOrderEnum typeOfOrder, decimal amountOfBtc)
+        private static List<string> MetaExchangeBestPrice( IEnumerable<string> orderBooks, IEnumerable<string> orderBooksUserBalance,
+            TypeOfOrderEnum typeOfOrder, decimal amountOfBtc)
         {
-            var metaExchange = DeserializeOrderBooks(orderBooks);
+            Stopwatch sp = Stopwatch.StartNew();
+            
+            //Deserialize the entities
+            var unorderedOrderBooks = DeserializeEntity<OrderBookEntity>(orderBooks);
+            var metaExchangeBalance =  DeserializeEntity<OrderBookBalanceEntity>(orderBooksUserBalance);
+            
+            
+            //Sort the Asks and Bids of the order for easier computation
+            var metaExchange = OrderAsksAndBidsForOrderBooks(unorderedOrderBooks);
 
 
             return new List<string>();
         }
+        
 
-        private static List<OrderBookEntity> DeserializeOrderBooks(List<string> orderBooks)
+        private static List<OrderBookEntity> OrderAsksAndBidsForOrderBooks(IEnumerable<OrderBookEntity> unorderedOrderBooks)
         {
-            //remove the timestamp so the row can be deserialized
-            var cleanOrderBooks = new List<string>();
-            orderBooks.ForEach(x => { cleanOrderBooks.Add(x.Remove(0, x.IndexOf('{'))); });
+            var metaExchange = new List<OrderBookEntity>();
 
-            //Serialize the Order books so we can pass it as a parameter for deserialization
-            var customSerializedOrderBooks = "[" + string.Join(",", cleanOrderBooks) + "]";
+            //sort by Price
+            foreach (var orderBook in unorderedOrderBooks)
+            {
+                var orderedAsks = orderBook.Asks.OrderBy(x => x.Order.Price).ToList();
+                var orderedBids = orderBook.Bids.OrderByDescending(x => x.Order.Price).ToList();
 
-            //Deserialize to .Net classes
-            List<OrderBookEntity> metaExchange;
-            try
-            {
-                metaExchange = JsonConvert.DeserializeObject<List<OrderBookEntity>>(customSerializedOrderBooks);
-            }
-            catch (JsonException e)
-            {
-                throw new Exception("Couldn't serialize the document! : " + e);
+                metaExchange.Add(new OrderBookEntity
+                {
+                    AcqTime = orderBook.AcqTime,
+                    Asks = orderedAsks,
+                    Bids = orderedBids
+                });
             }
 
             return metaExchange;
+        }
+
+        private static IEnumerable<T> DeserializeEntity<T> (IEnumerable<string> jsonRows)
+        { 
+            var deserializeEntities = new List<T>();
+            foreach (var x in jsonRows)
+            {
+                //Get the timestamp as ID so we can connect the balance and the data
+                var orderBookId = x.Remove(x.IndexOf('\t'));
+                
+                //remove the timestamp so the row can be deserialized
+                var cleanJson = x.Remove(0, x.IndexOf('{'));
+                
+                //Deserialize to .Net classes and save the ID
+                try
+                {
+                    dynamic deserializedEntity = JsonConvert.DeserializeObject<T>(cleanJson);
+                    if (deserializedEntity != null) deserializedEntity.OrderBookId = orderBookId;
+                    
+                    deserializeEntities.Add(deserializedEntity);
+                }
+                catch (JsonException e)
+                {
+                    throw new Exception("Couldn't serialize the document! : " + e);
+                }
+            }
+
+            return deserializeEntities;
         }
     }
 
