@@ -12,7 +12,7 @@ namespace MetaExchangeSowaLabs
     {
         private const string _PathToOrdersFile = "order_books_data";
         private const string _PathToBalanceFile = "order_books_balance";
-        private const int _NumberOfOrderBooks = 5000;
+        private const int _NumberOfOrderBooks = 9;
         
         static void Main(string[] args)
         {
@@ -22,7 +22,7 @@ namespace MetaExchangeSowaLabs
             
             
             //Call the algorithm 
-            var result = MetaExchangeBestPrice(orderBooks, orderBooksUserBalance, TypeOfOrderEnum.Sell, (decimal) 11.111111111111111);
+            var result = MetaExchangeBestPrice(orderBooks, orderBooksUserBalance, TypeOfOrderEnum.Buy, (decimal) 11.111111111111111);
             
             //Print the calculated optimal steps
             result.ForEach(Console.WriteLine);
@@ -65,9 +65,70 @@ namespace MetaExchangeSowaLabs
 
         private static List<string> HandleBuy(IEnumerable<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
         {
-            var metaExchange = OrderMetaExchangeByTypeOfOrder(unorderedOrderBooks, TypeOfOrderEnum.Sell);
+            //Check if we have any money at all
+            var userEurBalance = userBalance.Sum(balance => balance.Eur);
+            if (userEurBalance == 0)
+            {
+                throw new Exception("User doesn't have any money!");
+            }
 
-            return new List<string>();
+            //Make a Dictionary from userBalance as we will be checking it constantly
+            var userBalanceDict = userBalance.ToDictionary(x => x.OrderBookId);
+            
+            //Order all of the Bids from all of the CryptoExchanges and only take the ones where user has some balance
+            var metaExchange = OrderMetaExchangeByTypeOfOrder(unorderedOrderBooks, TypeOfOrderEnum.Buy)
+                .Where(x => userBalanceDict.ContainsKey(x.OrderBookId)).ToList();
+            
+            
+            var incrementalBoughtBtc = (decimal) 0;
+            var incrementalPurchaseInEur  = (decimal) 0;
+            var history = new Dictionary<int, decimal>();
+            
+            for (var i = 0; i < metaExchange.Count; i++)
+            {
+                var order = metaExchange[i];
+                var userBalanceEntity= userBalanceDict[order.OrderBookId];
+
+                //If the User balance has been used up there is no need to go further anymore
+                if(incrementalPurchaseInEur == userEurBalance) break;
+                
+                //If user doesn't have EUR at the orderBook traverse over it
+                if(userBalanceEntity.Eur ==  0) continue;
+                
+                //If we've already found the way to buy all the coins
+                if(incrementalBoughtBtc == amountOfBtc) break;
+                
+                //How many BTC User can buy for the current price
+                var howManyBtcUserCanBuy = userBalanceEntity.Eur / order.Price;
+                
+                //How many BTC User actually needs to buy
+                var howManyBtcUserNeedsToBuy = Math.Min(amountOfBtc - incrementalBoughtBtc, howManyBtcUserCanBuy); 
+
+                // User can buy the whole amount or partial
+                var realBtcUserWillBuy = Math.Min(howManyBtcUserNeedsToBuy, order.Amount);
+                var costOfPurchase = realBtcUserWillBuy * order.Price;
+                incrementalBoughtBtc += realBtcUserWillBuy;
+                incrementalPurchaseInEur += costOfPurchase;
+                userBalanceEntity.Eur -= costOfPurchase;
+                history.Add(i, realBtcUserWillBuy);
+            }
+
+            if (incrementalBoughtBtc != amountOfBtc) throw new Exception("Couldn't buy the desired BTC!");
+
+            var transactions = new List<string>();
+            foreach (var (key, value) in history)
+            {
+                //We can't use order IDs as they are null...
+                var transactionTemplate =
+                    $"On cryptoexchange with ID: {metaExchange[key].OrderBookId} " +
+                    $"buy {value} BTC where each costs: {metaExchange[key].Price} EUR";
+                
+                transactions.Add(transactionTemplate);
+            }
+            
+            return transactions;
+
+          
         }
         
         private static List<string> HandleSell(IEnumerable<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
@@ -97,13 +158,13 @@ namespace MetaExchangeSowaLabs
                 //If user doesn't have bitcoin at the orderBook traverse over it
                 if(userBalanceEntity.Bitcoin ==  0) continue;
                 
-                //If we've already found the way to buy all the coins
+                //If we've already found the way to sell all the coins
                 if(incrementalSoldBtc == amountOfBtc) break;
                 
-                //How many User actually needs to buy
+                //How many User actually needs to sell
                 var howManyBtcUserNeedsToSell = Math.Min(amountOfBtc - incrementalSoldBtc, userBalanceEntity.Bitcoin); 
 
-                // User can buy the whole amount or partial
+                // User can sell the whole amount or partial
                 var realBtcUserWillSell = Math.Min(howManyBtcUserNeedsToSell, order.Amount);
                 var costOfPurchase = realBtcUserWillSell * order.Price;
                 incrementalSoldBtc += realBtcUserWillSell;
@@ -138,7 +199,7 @@ namespace MetaExchangeSowaLabs
                     case TypeOfOrderEnum.Buy:
                         orderedAsksOrBids.AddRange(orderBook.Asks.Select(x => new MetaExchangeOrderEntity(x.Order,
                             orderBook.OrderBookId)));
-                        return orderedAsksOrBids.OrderByDescending(x => x.Price).ToList();
+                        break;
                     case TypeOfOrderEnum.Sell:
                         orderedAsksOrBids.AddRange(orderBook.Bids.Select(x => new MetaExchangeOrderEntity(x.Order,
                             orderBook.OrderBookId)));
