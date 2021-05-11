@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+using MetaExchangeSowaLabs.Entities;
+using MetaExchangeSowaLabs.Enums;
 using Newtonsoft.Json;
 
 namespace MetaExchangeSowaLabs
@@ -13,18 +12,17 @@ namespace MetaExchangeSowaLabs
     {
         private const string _PathToOrdersFile = "order_books_data";
         private const string _PathToBalanceFile = "order_books_balance";
-        private const int _NumberOfOrderBooks = 9;
+        private const int _NumberOfOrderBooks = 5000;
         
         static void Main(string[] args)
         {
-            //Extract order books raw data from the file
+            //Extract order books and balance raw data from the file
             var orderBooks = ExtractNRows(_PathToOrdersFile, _NumberOfOrderBooks);
             var orderBooksUserBalance = ExtractNRows(_PathToBalanceFile, _NumberOfOrderBooks);
             
-            //Extract balance raw data from the file
             
             //Call the algorithm 
-            var result = MetaExchangeBestPrice(orderBooks, orderBooksUserBalance, TypeOfOrderEnum.Sell, (decimal) 11);
+            var result = MetaExchangeBestPrice(orderBooks, orderBooksUserBalance, TypeOfOrderEnum.Sell, (decimal) 11.111111111111111);
             
             //Print the calculated optimal steps
             result.ForEach(Console.WriteLine);
@@ -61,20 +59,18 @@ namespace MetaExchangeSowaLabs
                 TypeOfOrderEnum.Sell => HandleSell(unorderedOrderBooks, userBalance, amountOfBtc),
                 _ => throw new Exception("Illegal order!")
             };
-
-
-
+            
             return result;
         }
 
-        private static List<string> HandleBuy(List<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
+        private static List<string> HandleBuy(IEnumerable<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
         {
             var metaExchange = OrderMetaExchangeByTypeOfOrder(unorderedOrderBooks, TypeOfOrderEnum.Sell);
 
             return new List<string>();
         }
         
-        private static List<string> HandleSell(List<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
+        private static List<string> HandleSell(IEnumerable<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
         {
             //Check if we have enough BTC to sell
             var userBtcBalance = userBalance.Sum(balance => balance.Bitcoin);
@@ -96,9 +92,8 @@ namespace MetaExchangeSowaLabs
             for (var i = 0; i < metaExchange.Count; i++)
             {
                 var order = metaExchange[i];
-                var userBalanceEntity= userBalanceDict[order.OrderBookId];    
-                
-                
+                var userBalanceEntity= userBalanceDict[order.OrderBookId];
+
                 //If user doesn't have bitcoin at the orderBook traverse over it
                 if(userBalanceEntity.Bitcoin ==  0) continue;
                 
@@ -154,35 +149,12 @@ namespace MetaExchangeSowaLabs
             }
             
             
-            //sort by Price
+            //sort by Price and Type
             return  typeOfOrderEnum == TypeOfOrderEnum.Buy 
                 ? orderedAsksOrBids.OrderBy(x => x.Price).ToList()
                 : orderedAsksOrBids.OrderByDescending(x => x.Price).ToList();
         }
         
-
-
-        private static List<OrderBookEntity> OrderAsksAndBidsForOrderBooks(IEnumerable<OrderBookEntity> unorderedOrderBooks)
-        {
-            var metaExchange = new List<OrderBookEntity>();
-
-            //sort by Price
-            foreach (var orderBook in unorderedOrderBooks)
-            {
-                var orderedAsks = orderBook.Asks.OrderBy(x => x.Order.Price).ToList();
-                var orderedBids = orderBook.Bids.OrderByDescending(x => x.Order.Price).ToList();
-
-                metaExchange.Add(new OrderBookEntity
-                {
-                    AcqTime = orderBook.AcqTime,
-                    Asks = orderedAsks,
-                    Bids = orderedBids
-                });
-            }
-
-            return metaExchange;
-        }
-
         private static List<T> DeserializeEntity<T> (IEnumerable<string> jsonRows)
         { 
             var deserializeEntities = new List<T>();
