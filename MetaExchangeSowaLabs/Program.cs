@@ -12,7 +12,7 @@ namespace MetaExchangeSowaLabs
     {
         private const string _PathToOrdersFile = "order_books_data";
         private const string _PathToBalanceFile = "order_books_balance";
-        private const int _NumberOfOrderBooks = 9;
+        private const int _NumberOfOrderBooks = 10;
         
         static void Main(string[] args)
         {
@@ -22,10 +22,17 @@ namespace MetaExchangeSowaLabs
             
             
             //Call the algorithm 
-            var result = MetaExchangeBestPrice(orderBooks, orderBooksUserBalance, TypeOfOrderEnum.Buy, (decimal) 11.111111111111111);
+            var result = MetaExchangeBestPrice(orderBooks,
+                orderBooksUserBalance,
+                TypeOfOrderEnum.Buy,
+                (decimal) 1500);
             
             //Print the calculated optimal steps
-            result.ForEach(Console.WriteLine);
+            foreach (var (key, value) in result)
+            {
+                Console.WriteLine($"For cryptoexchange with id {key} do this: ");
+                value.ForEach(Console.WriteLine);
+            }
         }
 
         private static IEnumerable<string> ExtractNRows(string path, int numberOfRows)
@@ -34,9 +41,13 @@ namespace MetaExchangeSowaLabs
         }
         
 
-        private static List<string> MetaExchangeBestPrice( IEnumerable<string> orderBooks, IEnumerable<string> orderBooksUserBalance,
+        private static Dictionary<string,List<string>> MetaExchangeBestPrice( IEnumerable<string> orderBooks, IEnumerable<string> orderBooksUserBalance,
             TypeOfOrderEnum typeOfOrder, decimal amountOfBtc)
         {
+            //Check if the amountOfBtc is valid
+            if (amountOfBtc <= 0)
+                throw new Exception("Illegal amount of BTC provided!");
+
             //Deserialize the entities
             var unorderedOrderBooks = DeserializeEntity<OrderBookEntity>(orderBooks);
             var userBalance =  DeserializeEntity<OrderBookBalanceEntity>(orderBooksUserBalance);
@@ -63,17 +74,23 @@ namespace MetaExchangeSowaLabs
             return result;
         }
 
-        private static List<string> HandleBuy(IEnumerable<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
+        private static Dictionary<string,List<string>> HandleBuy(IEnumerable<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
         {
-            //Check if we have any money at all
+            //Check if User has any money at all
             var userEurBalance = userBalance.Sum(balance => balance.Eur);
             if (userEurBalance == 0)
             {
                 throw new Exception("User doesn't have any money!");
             }
+            
+            Console.WriteLine($"Starting EUR balance: {userEurBalance} EUR.");
 
             //Make a Dictionary from userBalance as we will be checking it constantly
-            var userBalanceDict = userBalance.ToDictionary(x => x.OrderBookId);
+            //remove the crypt-exchanges where the EUR balance is 0
+            var userBalanceDict = userBalance
+                .Where(x => x.Eur > 0)
+                .ToDictionary(x => x.OrderBookId);
+                
             
             //Order all of the Bids from all of the CryptoExchanges and only take the ones where user has some balance
             var metaExchange = OrderMetaExchangeByTypeOfOrder(unorderedOrderBooks, TypeOfOrderEnum.Buy)
@@ -92,8 +109,8 @@ namespace MetaExchangeSowaLabs
                 //If the User balance has been used up there is no need to go further anymore
                 if(incrementalPurchaseInEur == userEurBalance) break;
                 
-                //If user doesn't have EUR at the orderBook traverse over it
-                if(userBalanceEntity.Eur ==  0) continue;
+                //If user doesn't have EUR at the orderBook traverse over it or perhaps if it's possible to have a negative balance..
+                if(userBalanceEntity.Eur <= 0) continue;
                 
                 //If we've already found the way to buy all the coins
                 if(incrementalBoughtBtc == amountOfBtc) break;
@@ -106,7 +123,8 @@ namespace MetaExchangeSowaLabs
 
                 // User can buy the whole amount or partial
                 var realBtcUserWillBuy = Math.Min(howManyBtcUserNeedsToBuy, order.Amount);
-                var costOfPurchase = realBtcUserWillBuy * order.Price;
+                //EUR needs to be rounded to two decimal places using banker's rounding.
+                var costOfPurchase = Math.Round(realBtcUserWillBuy * order.Price,2, MidpointRounding.ToEven);
                 incrementalBoughtBtc += realBtcUserWillBuy;
                 incrementalPurchaseInEur += costOfPurchase;
                 userBalanceEntity.Eur -= costOfPurchase;
@@ -114,34 +132,46 @@ namespace MetaExchangeSowaLabs
             }
 
             if (incrementalBoughtBtc != amountOfBtc) throw new Exception("Couldn't buy the desired BTC!");
-
-            var transactions = new List<string>();
+            
+            Console.WriteLine($"Can buy {amountOfBtc} BTC for {incrementalPurchaseInEur} EUR");
+            Console.WriteLine($"Ending balance: {userEurBalance-incrementalPurchaseInEur} EUR.");
+            Console.WriteLine("The steps are provided below: ");
+            
+            //Save the steps for every cryptoexchange separately  
+            var transactions = new Dictionary<string, List<string>>();
             foreach (var (key, value) in history)
             {
                 //We can't use order IDs as they are null...
-                var transactionTemplate =
-                    $"On cryptoexchange with ID: {metaExchange[key].OrderBookId} " +
-                    $"buy {value} BTC where each costs: {metaExchange[key].Price} EUR";
+                var transactionTemplate = $"Buy {value} BTC at {metaExchange[key].Price} EUR";
+
+                if (transactions.ContainsKey(metaExchange[key].OrderBookId))
+                {
+                    transactions[metaExchange[key].OrderBookId].Add(transactionTemplate);
+                    continue;
+                }
                 
-                transactions.Add(transactionTemplate);
+                transactions.Add(metaExchange[key].OrderBookId, new List<string>{ transactionTemplate });
             }
             
             return transactions;
-
-          
         }
         
-        private static List<string> HandleSell(IEnumerable<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
+        private static Dictionary<string, List<string>> HandleSell(IEnumerable<OrderBookEntity> unorderedOrderBooks, List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
         {
-            //Check if we have enough BTC to sell
+            //Check if Use has enough BTC to sell
             var userBtcBalance = userBalance.Sum(balance => balance.Bitcoin);
             if (userBtcBalance < amountOfBtc)
             {
                 throw new Exception("User hasn't got enough BTC to sell!");
             }
+            
+            Console.WriteLine($"Starting BTC balance: {userBtcBalance} BTC.");
 
             //Make a Dictionary from userBalance as we will be checking it constantly
-            var userBalanceDict = userBalance.ToDictionary(x => x.OrderBookId);
+            //remove the crypt-exchanges where the Bitcoin balance is 0
+            var userBalanceDict = userBalance
+                .Where(x => x.Bitcoin > 0)
+                .ToDictionary(x => x.OrderBookId);
             
             //Order all of the Bids from all of the CryptoExchanges and only take the ones where user has some balance
             var metaExchange = OrderMetaExchangeByTypeOfOrder(unorderedOrderBooks, TypeOfOrderEnum.Sell)
@@ -149,6 +179,7 @@ namespace MetaExchangeSowaLabs
             
             
             var incrementalSoldBtc = (decimal) 0;
+            var incrementalSellingInEur = (decimal) 0;
             var history = new Dictionary<int, decimal>();
             for (var i = 0; i < metaExchange.Count; i++)
             {
@@ -166,23 +197,33 @@ namespace MetaExchangeSowaLabs
 
                 // User can sell the whole amount or partial
                 var realBtcUserWillSell = Math.Min(howManyBtcUserNeedsToSell, order.Amount);
-                var costOfPurchase = realBtcUserWillSell * order.Price;
+                //EUR round to two digits using banker rounding
+                incrementalSellingInEur += Math.Round(realBtcUserWillSell * order.Price, 2, MidpointRounding.ToEven);
                 incrementalSoldBtc += realBtcUserWillSell;
                 userBalanceEntity.Bitcoin -= realBtcUserWillSell;
                 history.Add(i, realBtcUserWillSell);
             }
 
             if (incrementalSoldBtc != amountOfBtc) throw new Exception("Couldn't buy the desired BTC!");
-
-            var transactions = new List<string>();
+            
+            Console.WriteLine($"Can sell {amountOfBtc} BTC for {incrementalSellingInEur} EUR");
+            Console.WriteLine($"Ending balance: {userBtcBalance - amountOfBtc} BTC.");
+            Console.WriteLine("The steps are provided below: ");
+            
+            //Save the steps for every cryptoexchange separately  
+            var transactions = new Dictionary<string, List<string>>();
             foreach (var (key, value) in history)
             {
                 //We can't use order IDs as they are null...
-                var transactionTemplate =
-                    $"On cryptoexchange with ID: {metaExchange[key].OrderBookId} " +
-                    $"sell {value} BTC where each costs: {metaExchange[key].Price} EUR";
+                var transactionTemplate = $"Sell {value} BTC at {metaExchange[key].Price} EUR";
+
+                if (transactions.ContainsKey(metaExchange[key].OrderBookId))
+                {
+                    transactions[metaExchange[key].OrderBookId].Add(transactionTemplate);
+                    continue;
+                }
                 
-                transactions.Add(transactionTemplate);
+                transactions.Add(metaExchange[key].OrderBookId, new List<string>{ transactionTemplate });
             }
             
             return transactions;
@@ -217,15 +258,23 @@ namespace MetaExchangeSowaLabs
         }
         
         private static List<T> DeserializeEntity<T> (IEnumerable<string> jsonRows)
-        { 
+        {
+            
             var deserializeEntities = new List<T>();
             foreach (var x in jsonRows)
             {
+                //Basic check if the json is properly formatted
+                var indexOfTab = x.IndexOf('\t');
+                var indexOfCurlyBracer = x.IndexOf('{');
+                if (indexOfTab == -1 || indexOfCurlyBracer == -1)
+                    throw new Exception("Json not properly formatted!");
+                
+
                 //Get the timestamp as ID so we can connect the balance and the data
-                var orderBookId = x.Remove(x.IndexOf('\t'));
+                var orderBookId = x.Remove(indexOfTab);
                 
                 //remove the timestamp so the row can be deserialized
-                var cleanJson = x.Remove(0, x.IndexOf('{'));
+                var cleanJson = x.Remove(0, indexOfCurlyBracer);
                 
                 //Deserialize to .Net classes and save the ID
                 try
