@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaExchangeSowaLabs", "MetaExchangeSowaLabs\MetaExchangeSowaLabs.csproj", "{D7B23E06-AAAC-47AE-B660-4A8B45FC5721}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaExchangeSowaLabs.Tests", "MetaExchangeSowaLabs.Tests\MetaExchangeSowaLabs.Tests.csproj", "{00415C81-38D7-4B74-82ED-E0E6E8BE29BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{D7B23E06-AAAC-47AE-B660-4A8B45FC5721}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7B23E06-AAAC-47AE-B660-4A8B45FC5721}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7B23E06-AAAC-47AE-B660-4A8B45FC5721}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00415C81-38D7-4B74-82ED-E0E6E8BE29BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00415C81-38D7-4B74-82ED-E0E6E8BE29BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00415C81-38D7-4B74-82ED-E0E6E8BE29BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00415C81-38D7-4B74-82ED-E0E6E8BE29BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

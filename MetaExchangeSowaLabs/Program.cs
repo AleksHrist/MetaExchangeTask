@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace MetaExchangeSowaLabs
 {
-    class Program
+    public class Program
     {
         private const string _PathToOrdersFile = "order_books_data";
         private const string _PathToBalanceFile = "order_books_balance";
@@ -22,6 +22,7 @@ namespace MetaExchangeSowaLabs
             
             
             //Call the algorithm 
+            //Method is intentionally not a static method so we can call it from the Unit Testing project.
             var result = MetaExchangeBestPrice(orderBooks,
                 orderBooksUserBalance,
                 TypeOfOrderEnum.Buy,
@@ -39,9 +40,15 @@ namespace MetaExchangeSowaLabs
         {
             return File.ReadLines(path).Take(numberOfRows);
         }
-        
 
-        private static Dictionary<string,List<string>> MetaExchangeBestPrice( IEnumerable<string> orderBooks, IEnumerable<string> orderBooksUserBalance,
+
+        public static int Add(int a, int b)
+        {
+            return a + b;
+        }
+
+        //Method is intentionally not a static method so we can call it from the Unit Testing project.
+        public static Dictionary<string,List<string>> MetaExchangeBestPrice(IEnumerable<string> orderBooks, IEnumerable<string> orderBooksUserBalance,
             TypeOfOrderEnum typeOfOrder, decimal amountOfBtc)
         {
             //Check if the amountOfBtc is valid
