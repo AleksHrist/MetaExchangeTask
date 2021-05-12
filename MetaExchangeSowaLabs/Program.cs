@@ -19,10 +19,8 @@ namespace MetaExchangeSowaLabs
             //Extract order books and balance raw data from the file
             var orderBooks = ExtractNRows(_PathToOrdersFile, _NumberOfOrderBooks);
             var orderBooksUserBalance = ExtractNRows(_PathToBalanceFile, _NumberOfOrderBooks);
-            
-            
+
             //Call the algorithm 
-            //Method is intentionally not a static method so we can call it from the Unit Testing project.
             var result = MetaExchangeBestPrice(orderBooks,
                 orderBooksUserBalance,
                 TypeOfOrderEnum.Buy,
@@ -40,14 +38,7 @@ namespace MetaExchangeSowaLabs
         {
             return File.ReadLines(path).Take(numberOfRows);
         }
-
-
-        public static int Add(int a, int b)
-        {
-            return a + b;
-        }
-
-        //Method is intentionally not a static method so we can call it from the Unit Testing project.
+        
         public static Dictionary<string,List<string>> MetaExchangeBestPrice(IEnumerable<string> orderBooks, IEnumerable<string> orderBooksUserBalance,
             TypeOfOrderEnum typeOfOrder, decimal amountOfBtc)
         {
