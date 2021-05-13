@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using MetaExchangeSowaLabs.CustomErrors;
 using MetaExchangeSowaLabs.Entities;
 using MetaExchangeSowaLabs.Enums;
 using Newtonsoft.Json;
@@ -19,12 +20,12 @@ namespace MetaExchangeSowaLabs
             //Extract order books and balance raw data from the file
             var orderBooks = ExtractNRows(_PathToOrdersFile, _NumberOfOrderBooks);
             var orderBooksUserBalance = ExtractNRows(_PathToBalanceFile, _NumberOfOrderBooks);
-
+            
             //Call the algorithm 
             var result = MetaExchangeBestPrice(orderBooks,
                 orderBooksUserBalance,
                 TypeOfOrderEnum.Buy,
-                (decimal) 1500);
+                (decimal) 0.6923);
             
             //Print the calculated optimal steps
             foreach (var (key, value) in result)
@@ -44,7 +45,7 @@ namespace MetaExchangeSowaLabs
         {
             //Check if the amountOfBtc is valid
             if (amountOfBtc <= 0)
-                throw new Exception("Illegal amount of BTC provided!");
+                throw new IllegalAmountOfBtcException(amountOfBtc);
 
             //Deserialize the entities
             var unorderedOrderBooks = DeserializeEntity<OrderBookEntity>(orderBooks);
@@ -54,11 +55,11 @@ namespace MetaExchangeSowaLabs
             //Some starting edge-cases
             if (!unorderedOrderBooks.Any())
             {
-                throw new Exception("No order books available!");
+                throw new EmptyOrderBookOrBalanceException("order books");
             }
             if (!userBalance.Any())
             {
-                throw new Exception("No user balance available!");
+                throw new EmptyOrderBookOrBalanceException("user balance");
             }
             
            
@@ -78,7 +79,7 @@ namespace MetaExchangeSowaLabs
             var userEurBalance = userBalance.Sum(balance => balance.Eur);
             if (userEurBalance == 0)
             {
-                throw new Exception("User doesn't have any money!");
+                throw new UserHasNoMoneyOrBtcException("Eur");
             }
             
             Console.WriteLine($"Starting EUR balance: {userEurBalance} EUR.");
@@ -129,7 +130,7 @@ namespace MetaExchangeSowaLabs
                 history.Add(i, realBtcUserWillBuy);
             }
 
-            if (incrementalBoughtBtc != amountOfBtc) throw new Exception("Couldn't buy the desired BTC!");
+            if (incrementalBoughtBtc != amountOfBtc) throw new CantBuyDesiredBtcException(amountOfBtc);
             
             Console.WriteLine($"Can buy {amountOfBtc} BTC for {incrementalPurchaseInEur} EUR");
             Console.WriteLine($"Ending balance: {userEurBalance-incrementalPurchaseInEur} EUR.");
@@ -140,7 +141,7 @@ namespace MetaExchangeSowaLabs
             foreach (var (key, value) in history)
             {
                 //We can't use order IDs as they are null...
-                var transactionTemplate = $"Buy {value} BTC at {metaExchange[key].Price} EUR";
+                var transactionTemplate = $"Buy {value:G0} BTC at {metaExchange[key].Price} EUR";
 
                 if (transactions.ContainsKey(metaExchange[key].OrderBookId))
                 {
@@ -160,7 +161,7 @@ namespace MetaExchangeSowaLabs
             var userBtcBalance = userBalance.Sum(balance => balance.Bitcoin);
             if (userBtcBalance < amountOfBtc)
             {
-                throw new Exception("User hasn't got enough BTC to sell!");
+                throw new UserHasNoMoneyOrBtcException("BTC");
             }
             
             Console.WriteLine($"Starting BTC balance: {userBtcBalance} BTC.");
@@ -202,7 +203,7 @@ namespace MetaExchangeSowaLabs
                 history.Add(i, realBtcUserWillSell);
             }
 
-            if (incrementalSoldBtc != amountOfBtc) throw new Exception("Couldn't buy the desired BTC!");
+            if (incrementalSoldBtc != amountOfBtc) throw new CantSellDesiredBtcException(amountOfBtc);
             
             Console.WriteLine($"Can sell {amountOfBtc} BTC for {incrementalSellingInEur} EUR");
             Console.WriteLine($"Ending balance: {userBtcBalance - amountOfBtc} BTC.");
@@ -265,7 +266,7 @@ namespace MetaExchangeSowaLabs
                 var indexOfTab = x.IndexOf('\t');
                 var indexOfCurlyBracer = x.IndexOf('{');
                 if (indexOfTab == -1 || indexOfCurlyBracer == -1)
-                    throw new Exception("Json not properly formatted!");
+                    throw new JsonException("Json not properly formatted!");
                 
 
                 //Get the timestamp as ID so we can connect the balance and the data
@@ -284,7 +285,7 @@ namespace MetaExchangeSowaLabs
                 }
                 catch (JsonException e)
                 {
-                    throw new Exception("Couldn't serialize the document! : " + e);
+                    throw new JsonException("Couldn't serialize the document! : " + e);
                 }
             }
 
