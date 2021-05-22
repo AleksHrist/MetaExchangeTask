@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using MetaExchangeSowaLabs.Lib.Enums;
-using MetaExchangeSowaLabs.Lib.Helpers;
-using MetaExchangeSowaLabs.Lib.Services;
-using MetaExchangeSowaLabs.Lib.Services.Interfaces;
+﻿using MetaExchangeSowaLabs.Core.Enums;
+using MetaExchangeSowaLabs.Core.Files;
+using MetaExchangeSowaLabs.Services.Helpers;
+using MetaExchangeSowaLabs.Services.Services;
+using MetaExchangeSowaLabs.Services.Services.Interfaces;
 
 namespace MetaExchangeSowaLabs
 {
@@ -18,8 +15,8 @@ namespace MetaExchangeSowaLabs
         static void Main(string[] args)
         {
             //Extract order books and balance raw data from the file
-            var orderBooks = FileIOHelper.ExtractNRows(_PathToOrdersFile, _NumberOfOrderBooks);
-            var orderBooksUserBalance = FileIOHelper.ExtractNRows(_PathToBalanceFile, _NumberOfOrderBooks);
+            var orderBooks = IoFiles.ExtractNRows(_PathToOrdersFile, _NumberOfOrderBooks);
+            var orderBooksUserBalance = IoFiles.ExtractNRows(_PathToBalanceFile, _NumberOfOrderBooks);
             
             //Call the algorithm 
             IMetaExchangeService metaExchangeService = new MetaExchangeService();
@@ -29,7 +26,7 @@ namespace MetaExchangeSowaLabs
                 (decimal) 0.6923);
             
             //Print the calculated optimal steps
-            metaExchangeService.PrintOptimalStepsToStdOut(result);
+            PrintToStdHelper.PrintOptimalStepsToStdOut(result);
         }
     }
 

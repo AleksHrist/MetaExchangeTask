@@ -1,10 +1,21 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
 using Newtonsoft.Json;
 
-namespace MetaExchangeSowaLabs.Lib.Helpers
+namespace MetaExchangeSowaLabs.Core.Files
 {
-    public static class JsonHelper
+    public static class IoFiles
     {
+        public static IEnumerable<string> ExtractNRows(string path, int numberOfRows)
+        {
+            if (!File.Exists(path))
+                throw new FileNotFoundException();
+            
+            return File.ReadLines(path).Take(numberOfRows);
+        }
+        
         public static List<T> DeserializeEntity<T>(IEnumerable<string> jsonRows)
         {
             var deserializeEntities = new List<T>();

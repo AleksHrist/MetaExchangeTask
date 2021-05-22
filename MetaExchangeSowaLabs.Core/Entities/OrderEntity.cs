@@ -1,7 +1,7 @@
 ﻿using System;
-using MetaExchangeSowaLabs.Lib.Enums;
+using MetaExchangeSowaLabs.Core.Enums;
 
-namespace MetaExchangeSowaLabs.Lib.Entities
+namespace MetaExchangeSowaLabs.Core.Entities
 {
     public class OrderEntity
     {

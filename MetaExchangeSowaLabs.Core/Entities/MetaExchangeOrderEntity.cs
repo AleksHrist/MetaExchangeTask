@@ -1,4 +1,4 @@
-﻿namespace MetaExchangeSowaLabs.Lib.Entities
+﻿namespace MetaExchangeSowaLabs.Core.Entities
 {
     public class MetaExchangeOrderEntity : OrderEntity
     {

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MetaExchangeSowaLabs.Lib.CustomErrors;
-using MetaExchangeSowaLabs.Lib.Entities;
-using MetaExchangeSowaLabs.Lib.Enums;
-using MetaExchangeSowaLabs.Lib.Helpers;
-using MetaExchangeSowaLabs.Lib.Services.Interfaces;
+using MetaExchangeSowaLabs.Core.CustomErrors;
+using MetaExchangeSowaLabs.Core.Entities;
+using MetaExchangeSowaLabs.Core.Enums;
+using MetaExchangeSowaLabs.Core.Files;
+using MetaExchangeSowaLabs.Services.Services.Interfaces;
 
-namespace MetaExchangeSowaLabs.Lib.Services
+namespace MetaExchangeSowaLabs.Services.Services
 {
     public class MetaExchangeService : IMetaExchangeService
     {
@@ -19,8 +19,8 @@ namespace MetaExchangeSowaLabs.Lib.Services
                 throw new IllegalAmountOfBtcException(amountOfBtc);
 
                 //Deserialize the entities
-            var unorderedOrderBooks = JsonHelper.DeserializeEntity<OrderBookEntity>(orderBooks);
-            var userBalance = JsonHelper.DeserializeEntity<OrderBookBalanceEntity>(orderBooksUserBalance);
+            var unorderedOrderBooks = IoFiles.DeserializeEntity<OrderBookEntity>(orderBooks);
+            var userBalance = IoFiles.DeserializeEntity<OrderBookBalanceEntity>(orderBooksUserBalance);
 
 
             //Some starting edge-cases
@@ -47,17 +47,7 @@ namespace MetaExchangeSowaLabs.Lib.Services
             return result;
         }
 
-        public void PrintOptimalStepsToStdOut(Dictionary<string, List<string>> result)
-        {
-            foreach (var (key, value) in result)
-            {
-                Console.WriteLine($"For cryptoexchange with id {key} do this: ");
-                value.ForEach(Console.WriteLine);
-            }
-        }
-
-
-        private static Dictionary<string, List<string>> HandleBuy(IEnumerable<OrderBookEntity> unorderedOrderBooks,
+        private Dictionary<string, List<string>> HandleBuy(IEnumerable<OrderBookEntity> unorderedOrderBooks,
             List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
         {
             //Check if User has any money at all
@@ -83,7 +73,7 @@ namespace MetaExchangeSowaLabs.Lib.Services
             decimal incrementalPurchaseInEur = 0;
             var history = new Dictionary<int, decimal>();
 
-            for (var i = 0; i < metaExchange.Count; i++)
+            for (int i = 0; i < metaExchange.Count; i++)
             {
                 var order = metaExchange[i];
                 var userBalanceEntity = userBalanceDict[order.OrderBookId];
@@ -129,7 +119,7 @@ namespace MetaExchangeSowaLabs.Lib.Services
             return transactions;
         }
 
-        private static Dictionary<string, List<string>> HandleSell(IEnumerable<OrderBookEntity> unorderedOrderBooks,
+        private Dictionary<string, List<string>> HandleSell(IEnumerable<OrderBookEntity> unorderedOrderBooks,
             List<OrderBookBalanceEntity> userBalance, decimal amountOfBtc)
         {
             //Check if Use has enough BTC to sell
@@ -153,7 +143,7 @@ namespace MetaExchangeSowaLabs.Lib.Services
             decimal incrementalSoldBtc =  0;
             decimal incrementalSellingInEur =  0;
             var history = new Dictionary<int, decimal>();
-            for (var i = 0; i < metaExchange.Count; i++)
+            for (int i = 0; i < metaExchange.Count; i++)
             {
                 var order = metaExchange[i];
                 var userBalanceEntity = userBalanceDict[order.OrderBookId];
@@ -192,7 +182,7 @@ namespace MetaExchangeSowaLabs.Lib.Services
         }
 
 
-        private static IEnumerable<MetaExchangeOrderEntity> OrderMetaExchangeByTypeOfOrder(
+        private IEnumerable<MetaExchangeOrderEntity> OrderMetaExchangeByTypeOfOrder(
             IEnumerable<OrderBookEntity> unorderedOrderBooks, TypeOfOrderEnum typeOfOrderEnum)
         {
             var orderedAsksOrBids = new List<MetaExchangeOrderEntity>();
@@ -221,7 +211,7 @@ namespace MetaExchangeSowaLabs.Lib.Services
                 : orderedAsksOrBids.OrderByDescending(x => x.Price).ToList();
         }
 
-        private static Dictionary<string, List<string>> SaveOptimalStepsInDictionary(Dictionary<int, decimal> history,
+        private Dictionary<string, List<string>> SaveOptimalStepsInDictionary(Dictionary<int, decimal> history,
             List<MetaExchangeOrderEntity> metaExchange, TypeOfOrderEnum typeOfOrderEnum)
         {
             var transactions = new Dictionary<string, List<string>>();

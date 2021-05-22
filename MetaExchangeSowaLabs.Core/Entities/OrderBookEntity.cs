@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MetaExchangeSowaLabs.Lib.Entities
+namespace MetaExchangeSowaLabs.Core.Entities
 {
     public class OrderBookEntity
     {

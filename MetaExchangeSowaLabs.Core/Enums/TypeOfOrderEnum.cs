@@ -1,4 +1,4 @@
-﻿namespace MetaExchangeSowaLabs.Lib.Enums
+﻿namespace MetaExchangeSowaLabs.Core.Enums
 {
     public enum TypeOfOrderEnum
     {

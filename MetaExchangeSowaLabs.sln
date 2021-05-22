@@ -4,7 +4,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaExchangeSowaLabs", "Met
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaExchangeSowaLabs.Tests", "MetaExchangeSowaLabs.Tests\MetaExchangeSowaLabs.Tests.csproj", "{00415C81-38D7-4B74-82ED-E0E6E8BE29BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaExchangeSowaLabs.Lib", "MetaExchangeSowaLabs.Lib\MetaExchangeSowaLabs.Lib.csproj", "{2041F5AB-B820-47B7-BB33-1791FB769FFB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaExchangeSowaLabs.Core", "MetaExchangeSowaLabs.Core\MetaExchangeSowaLabs.Core.csproj", "{2041F5AB-B820-47B7-BB33-1791FB769FFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaExchangeSowaLabs.Services", "MetaExchangeSowaLabs.Services\MetaExchangeSowaLabs.Services.csproj", "{9792B4C0-A633-4054-8FB7-16A3AB15FD4D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +26,9 @@ Global
 		{2041F5AB-B820-47B7-BB33-1791FB769FFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2041F5AB-B820-47B7-BB33-1791FB769FFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2041F5AB-B820-47B7-BB33-1791FB769FFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9792B4C0-A633-4054-8FB7-16A3AB15FD4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9792B4C0-A633-4054-8FB7-16A3AB15FD4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9792B4C0-A633-4054-8FB7-16A3AB15FD4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9792B4C0-A633-4054-8FB7-16A3AB15FD4D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

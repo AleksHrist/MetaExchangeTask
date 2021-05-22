@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MetaExchangeSowaLabs.Lib.CustomErrors
+namespace MetaExchangeSowaLabs.Core.CustomErrors
 {
     public class IllegalAmountOfBtcException : Exception
     {
