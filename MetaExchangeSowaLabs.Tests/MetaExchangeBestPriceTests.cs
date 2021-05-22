@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using MetaExchangeSowaLabs.CustomErrors;
-using MetaExchangeSowaLabs.Enums;
-using MetaExchangeSowaLabs.Services;
-using MetaExchangeSowaLabs.Services.Interfaces;
+using MetaExchangeSowaLabs.Lib.CustomErrors;
+using MetaExchangeSowaLabs.Lib.Enums;
+using MetaExchangeSowaLabs.Lib.Services;
+using MetaExchangeSowaLabs.Lib.Services.Interfaces;
+using MetaExchangeSowaLabs.Lib.Services;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -11,11 +12,16 @@ namespace MetaExchangeSowaLabs.Tests
 {
     public class MetaExchangeBestPriceTests
     {
+        private readonly IMetaExchangeService _metaExchangeService;
+
+        public MetaExchangeBestPriceTests()
+        {
+            _metaExchangeService = new MetaExchangeService();
+        }
+
         [Fact]
         public void SendingEmptyListOrderBooksShouldThrowException()
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string>();
             var orderBooksUserBalance = new List<string> {@"1548759600.25189	{""Bitcoin"": 5, ""Eur"": 1221312301.12}"};
             var typeOfOrder = TypeOfOrderEnum.Buy;
@@ -23,22 +29,20 @@ namespace MetaExchangeSowaLabs.Tests
 
             
             Assert.Throws<EmptyOrderBookOrBalanceException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder,
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder,
                     amountOfBtc));
         }
 
         [Fact]
         public void SendingEmptyListOrderBooksUserBalanceShouldThrowException()
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string> {@"1548759600.25189	{""Bitcoin"": 5, ""Eur"": 1221312301.12}"};
             var orderBooksUserBalance = new List<string>();
             var typeOfOrder = TypeOfOrderEnum.Buy;
             var amountOfBtc = (decimal) 15;
 
             Assert.Throws<EmptyOrderBookOrBalanceException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder,
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder,
                     amountOfBtc));
         }
 
@@ -47,21 +51,17 @@ namespace MetaExchangeSowaLabs.Tests
         [InlineData(-2)]
         public void SendingNegativeOrZeroBtcAmountShouldThrowException(decimal amountOfBtc)
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string> {@"1548759600.25189	{""Bitcoin"": 5, ""Eur"": 1221312301.12}"};
             var orderBooksUserBalance = new List<string> {@"1548759600.25189	{""Bitcoin"": 5, ""Eur"": 1221312301.12}"};
             var typeOfOrder = TypeOfOrderEnum.Buy;
 
             Assert.Throws<IllegalAmountOfBtcException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
         }
 
         [Fact]
         public void BadlyFormatedJsonShouldThrowException()
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string>
             {
                 @"1548759600.25189
@@ -82,14 +82,12 @@ namespace MetaExchangeSowaLabs.Tests
             var amountOfBtc = (decimal) 15;
 
             Assert.Throws<JsonException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
         }
 
         [Fact]
         public void UserWithNoMoneyWhenBuyingBtcShouldThrowException()
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string>
             {
                 @"1548759600.25189	{
@@ -110,14 +108,12 @@ namespace MetaExchangeSowaLabs.Tests
             var amountOfBtc = (decimal) 15;
 
             Assert.Throws<UserHasNoMoneyOrBtcException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
         }
 
         [Fact]
         public void UserWithNoBtcWhenSellingBtcShouldThrowException()
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string>
             {
                 @"1548759600.25189	{
@@ -138,7 +134,7 @@ namespace MetaExchangeSowaLabs.Tests
             var amountOfBtc = (decimal) 15;
 
             Assert.Throws<UserHasNoMoneyOrBtcException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
         }
 
 
@@ -149,10 +145,8 @@ namespace MetaExchangeSowaLabs.Tests
             IEnumerable<string> orderBooksUserBalance,
             TypeOfOrderEnum typeOfOrder, decimal amountOfBtc)
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             Assert.Equal(expectedResult,
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
         }
 
         public static IEnumerable<object[]> TestData()
@@ -433,8 +427,6 @@ namespace MetaExchangeSowaLabs.Tests
         [Fact]
         public void UserWithNotEnoughMoneyWhenBuyingBtcShouldThrowException()
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string>
             {
                 @"1548759600.25189	{
@@ -455,14 +447,12 @@ namespace MetaExchangeSowaLabs.Tests
             var amountOfBtc = (decimal) 0.5;
 
             Assert.Throws<CantBuyDesiredBtcException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
         }
 
         [Fact]
         public void UserWantsToBuyMoreThanAvailableBtcInTheMarketShouldThrowException()
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string>
             {
                 @"1548759600.25189	{
@@ -483,14 +473,12 @@ namespace MetaExchangeSowaLabs.Tests
             var amountOfBtc = (decimal) 100;
 
             Assert.Throws<CantBuyDesiredBtcException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
         }
 
         [Fact]
         public void UserWantsToSellMoreBtcThanOthersWantToBuyInTheMarketShouldThrowException()
         {
-            IMetaExchangeService metaExchangeService = new MetaExchangeService();
-            
             var orderBooks = new List<string>
             {
                 @"1548759600.25189	{
@@ -511,7 +499,7 @@ namespace MetaExchangeSowaLabs.Tests
             var amountOfBtc = (decimal) 100;
 
             Assert.Throws<CantSellDesiredBtcException>(() =>
-                metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
+                _metaExchangeService.GetOptimalStepsForBestPrice(orderBooks, orderBooksUserBalance, typeOfOrder, amountOfBtc));
         }
     }
 }

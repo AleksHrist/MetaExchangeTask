@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MetaExchangeSowaLabs.CustomErrors;
-using MetaExchangeSowaLabs.Entities;
-using MetaExchangeSowaLabs.Enums;
-using MetaExchangeSowaLabs.Helpers;
-using MetaExchangeSowaLabs.Services;
-using MetaExchangeSowaLabs.Services.Interfaces;
-using Newtonsoft.Json;
+using MetaExchangeSowaLabs.Lib.Enums;
+using MetaExchangeSowaLabs.Lib.Helpers;
+using MetaExchangeSowaLabs.Lib.Services;
+using MetaExchangeSowaLabs.Lib.Services.Interfaces;
 
 namespace MetaExchangeSowaLabs
 {
