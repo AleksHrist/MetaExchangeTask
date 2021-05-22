@@ -15,7 +15,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <ProjectReference Include="..\MetaExchangeSowaLabs.Services\MetaExchangeSowaLabs.Services.csproj" />
+      <ProjectReference Include="..\MetaExchangeSowaLabs.Core\MetaExchangeSowaLabs.Core.csproj" />
     </ItemGroup>
 
 </Project>
