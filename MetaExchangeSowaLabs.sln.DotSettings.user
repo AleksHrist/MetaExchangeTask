@@ -1,4 +1,0 @@
-﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f08305ea_002Dfd32_002D4a57_002D9455_002D0ca0f1cfe8ce/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from MetaExchangeBestPriceTests.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;ProjectFile&gt;00415C81-38D7-4B74-82ED-E0E6E8BE29BF/f:MetaExchangeBestPriceTests.cs&lt;/ProjectFile&gt;&#xD;
-&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
