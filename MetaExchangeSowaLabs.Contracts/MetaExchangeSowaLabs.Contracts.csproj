@@ -2,12 +2,9 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
-        <AssemblyName>MetaExchangeSowaLabs.Services</AssemblyName>
-        <RootNamespace>MetaExchangeSowaLabs.Services</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MetaExchangeSowaLabs.Contracts\MetaExchangeSowaLabs.Contracts.csproj" />
       <ProjectReference Include="..\MetaExchangeSowaLabs.Core\MetaExchangeSowaLabs.Core.csproj" />
     </ItemGroup>
 

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MetaExchangeSowaLabs.Contracts.Interfaces;
 using MetaExchangeSowaLabs.Core.CustomErrors;
 using MetaExchangeSowaLabs.Core.Entities;
 using MetaExchangeSowaLabs.Core.Enums;
-using MetaExchangeSowaLabs.Core.Files;
-using MetaExchangeSowaLabs.Services.Services.Interfaces;
+using MetaExchangeSowaLabs.Core.Json;
 
-namespace MetaExchangeSowaLabs.Services.Services
+namespace MetaExchangeSowaLabs.Services.MetaExchange
 {
     public class MetaExchangeService : IMetaExchangeService
     {
@@ -19,8 +19,8 @@ namespace MetaExchangeSowaLabs.Services.Services
                 throw new IllegalAmountOfBtcException(amountOfBtc);
 
                 //Deserialize the entities
-            var unorderedOrderBooks = IoFiles.DeserializeEntity<OrderBookEntity>(orderBooks);
-            var userBalance = IoFiles.DeserializeEntity<OrderBookBalanceEntity>(orderBooksUserBalance);
+            var unorderedOrderBooks = Json.DeserializeEntity<OrderBookEntity>(orderBooks);
+            var userBalance = Json.DeserializeEntity<OrderBookBalanceEntity>(orderBooksUserBalance);
 
 
             //Some starting edge-cases
