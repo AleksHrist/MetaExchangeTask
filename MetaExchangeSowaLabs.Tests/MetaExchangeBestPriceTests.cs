@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using MetaExchangeSowaLabs.Core.CustomErrors;
 using MetaExchangeSowaLabs.Core.Enums;
+using MetaExchangeSowaLabs.Services.Interfaces;
 using MetaExchangeSowaLabs.Services.Services;
-using MetaExchangeSowaLabs.Services.Services.Interfaces;
 using Newtonsoft.Json;
 using Xunit;
 

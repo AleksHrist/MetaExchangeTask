@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using MetaExchangeSowaLabs.Core.Enums;
 
-namespace MetaExchangeSowaLabs.Services.Services.Interfaces
+namespace MetaExchangeSowaLabs.Services.Interfaces
 {
     public interface IMetaExchangeService
     {

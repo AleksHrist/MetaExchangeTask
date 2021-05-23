@@ -1,8 +1,8 @@
 ﻿using MetaExchangeSowaLabs.Core.Enums;
 using MetaExchangeSowaLabs.Core.Files;
 using MetaExchangeSowaLabs.Services.Helpers;
+using MetaExchangeSowaLabs.Services.Interfaces;
 using MetaExchangeSowaLabs.Services.Services;
-using MetaExchangeSowaLabs.Services.Services.Interfaces;
 
 namespace MetaExchangeSowaLabs
 {
