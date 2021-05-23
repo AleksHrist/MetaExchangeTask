@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MetaExchangeSowaLabs.Contracts.Interfaces;
 using MetaExchangeSowaLabs.Core.CustomErrors;
 using MetaExchangeSowaLabs.Core.Entities;
 using MetaExchangeSowaLabs.Core.Enums;
-using MetaExchangeSowaLabs.Core.Files;
 using MetaExchangeSowaLabs.Core.Json;
-using MetaExchangeSowaLabs.Services.Interfaces;
 
-namespace MetaExchangeSowaLabs.Services.Services
+namespace MetaExchangeSowaLabs.Services.MetaExchange
 {
     public class MetaExchangeService : IMetaExchangeService
     {
